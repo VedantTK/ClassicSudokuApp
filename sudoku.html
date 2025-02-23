@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Sudoku Game</title>
+    <style>
+      /* General Reset and Layout */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #B85042;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #333;
+}
+
+.container {
+    width: 80%;
+    max-width: 700px;
+    background-color: #E7E8D1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Header Section */
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: 3em;
+    color: #B85042;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+.difficulty {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.difficulty .btn {
+    background-color: #B85042;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.difficulty .btn:hover {
+    background-color: #45a049;
+}
+
+/* Sudoku Grid */
+.game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    gap: 1px;
+    margin-bottom: 20px;
+}
+
+.cell {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5em;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    transition: background-color 0.3s ease;
+}
+
+.cell input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1.5em;
+    outline: none;
+    background-color: transparent;
+    font-weight: bold;
+}
+
+.cell.disabled {
+    background-color: #f2f2f2;
+    color: #ccc;
+}
+
+.cell.error {
+    background-color: #f8d7da;
+}
+
+/* Controls Section */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.controls .btn {
+    background-color: #B85042;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.controls .btn:hover {
+    background-color: #45a049;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.8em;
+    color: #888;
+}
+
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Classic Sudoku Puzzle</h1>
+            <p>Select Difficulty</p>
+            <div class="difficulty">
+                <button id="easy" class="btn">Easy</button>
+                <button id="medium" class="btn">Medium</button>
+                <button id="hard" class="btn">Hard</button>
+            </div>
+        </header>
+        
+        <div class="game">
+            <div class="board" id="board"></div>
+            <div class="controls">
+                <button id="reset" class="btn">Reset</button>
+                <button id="check" class="btn">Check</button>
+                <button id="solve" class="btn">Solve</button>
+            </div>
+        </div>
+        
+        <footer>
+            <p>&copy; 2025 Premium Sudoku</p>
+        </footer>
+    </div>
+    
+    <script>
+      // script.js
+const boardElement = document.getElementById("board");
+const resetButton = document.getElementById("reset");
+const checkButton = document.getElementById("check");
+const solveButton = document.getElementById("solve");
+const difficultyButtons = document.querySelectorAll(".difficulty .btn");
+
+let board = [];
+let solution = [];
+let difficulty = 'easy'; // Default difficulty
+
+// Initialize the board
+function initBoard() {
+    board = [];
+    solution = generateSolvedBoard();
+    boardElement.innerHTML = '';
+
+    for (let row = 0; row < 9; row++) {
+        const rowArray = [];
+        for (let col = 0; col < 9; col++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            const input = document.createElement("input");
+            input.type = "number";
+            input.min = "1";
+            input.max = "9";
+            input.id = `${row}-${col}`;
+            input.addEventListener("input", () => handleInput(row, col, input));
+            cell.appendChild(input);
+            boardElement.appendChild(cell);
+            rowArray.push(input);
+        }
+        board.push(rowArray);
+    }
+    createPuzzle();
+}
+
+// Generate a solved Sudoku board (just a placeholder for simplicity)
+function generateSolvedBoard() {
+    return [
+        [5, 3, 4, 6, 7, 8, 9, 1, 2],
+        [6, 7, 2, 1, 9, 5, 3, 4, 8],
+        [1, 9, 8, 3, 4, 2, 5, 6, 7],
+        [8, 5, 9, 7, 6, 1, 4, 2, 3],
+        [4, 2, 6, 8, 5, 3, 7, 9, 1],
+        [7, 1, 3, 9, 2, 4, 8, 5, 6],
+        [9, 6, 1, 5, 3, 7, 2, 8, 4],
+        [2, 8, 7, 4, 1, 9, 6, 3, 5],
+        [3, 4, 5, 2, 8, 6, 1, 7, 9]
+    ];
+}
+
+// Create a puzzle based on selected difficulty
+function createPuzzle() {
+    const difficultyLevels = {
+        easy: 0.5,
+        medium: 0.3,
+        hard: 0.2
+    };
+
+    const removeCount = Math.floor(81 * difficultyLevels[difficulty]);
+
+    // Reset board and make some cells empty based on difficulty
+    let count = 0;
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            if (Math.random() > difficultyLevels[difficulty]) {
+                board[row][col].value = solution[row][col];
+                board[row][col].disabled = true;
+            } else {
+                board[row][col].value = '';
+                board[row][col].disabled = false;
+                count++;
+            }
+        }
+    }
+}
+
+// Handle input validation
+function handleInput(row, col, input) {
+    if (input.value != '' && (input.value < 1 || input.value > 9)) {
+        input.value = '';
+    }
+}
+
+// Check solution
+checkButton.addEventListener("click", () => {
+    let isValid = true;
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            const userValue = parseInt(board[row][col].value);
+            if (userValue !== solution[row][col]) {
+                isValid = false;
+                board[row][col].classList.add('error');
+            } else {
+                board[row][col].classList.remove('error');
+            }
+        }
+    }
+    if (isValid) alert("Congratulations! Solution is correct.");
+    else alert("Some values are incorrect. Try again.");
+});
+
+// Solve the puzzle
+solveButton.addEventListener("click", () => {
+    for (let row = 0; row < 9; row++) {
+        for (let col = 0; col < 9; col++) {
+            board[row][col].value = solution[row][col];
+            board[row][col].disabled = true;
+        }
+    }
+});
+
+// Reset the board
+resetButton.addEventListener("click", initBoard);
+
+// Change difficulty
+difficultyButtons.forEach(button => {
+    button.addEventListener("click", (e) => {
+        difficulty = e.target.id;
+        initBoard();
+    });
+});
+
+// Initialize board on page load
+window.onload = initBoard;
+
+    </script>
+</body>
+</html>
+
